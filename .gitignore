@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.tasks/
+
+.venv/
+__pycache__/
+*.pyc
+.tasks/
+dojo.db
+

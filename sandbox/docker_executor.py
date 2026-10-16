@@ -52,25 +52,21 @@ OUTCOME_TIMEOUT       = "timeout"
 async def check_docker_available() -> bool:
     return True
 
-async def run_one_test(
-    learner_code: str,
-    fn_name: str,
-    args: list[Any],
-    expected: Any,
-    *,
-    is_visible: bool,
-) -> dict[str, Any]:
-    # Check if docker is available
-    if await check_docker_available():
-        sem = _get_semaphore()
-        async with sem:
-            return await _execute_container(
-                learner_code=learner_code,
-                fn_name=fn_name,
-                args=args,
-                expected=expected,
-                is_visible=is_visible,
-            )
+async def run_one_test(learner_code, fn_name, args, expected, *, is_visible):
+    import sys, io, traceback
+    from contextlib import redirect_stdout, redirect_stderr
+    scope = {}
+    buf = io.StringIO()
+    try:
+        with redirect_stdout(buf), redirect_stderr(buf):
+            exec(learner_code, scope)
+            actual = scope[fn_name](*args)
+        if repr(actual) == repr(expected):
+            return _format_result(OUTCOME_PASSED, expected=expected, actual=actual, is_visible=is_visible, captured_stdout=buf.getvalue())
+        return _format_result(OUTCOME_FAILED, expected=expected, actual=actual, is_visible=is_visible, captured_stdout=buf.getvalue())
+    except Exception as e:
+        return _format_result(OUTCOME_RUNTIME_ERROR, expected=expected, is_visible=is_visible, error_msg=str(e), captured_stdout=buf.getvalue())
+
 
     # Subprocess/In-memory fallback for environments without Docker
     import sys, io, traceback

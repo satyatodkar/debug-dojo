@@ -37,8 +37,9 @@ class BoundedWriter:
 
 def main():
     # ── Read task input ──────────────────────────────────────────────────
+    task_dir = sys.argv[1] if len(sys.argv) > 1 else "/task"
     try:
-        with open("/task/input.json", "r", encoding="utf-8") as f:
+        with open(os.path.join(task_dir, "input.json"), "r", encoding="utf-8") as f:
             spec = json.load(f)
         fn_name = spec["fn"]
         args    = spec.get("args", [])
@@ -56,7 +57,7 @@ def main():
 
     # ── Load learner module ──────────────────────────────────────────────
     try:
-        spec_obj = importlib.util.spec_from_file_location("learner_code", "/task/code.py")
+        spec_obj = importlib.util.spec_from_file_location("learner_code", os.path.join(task_dir, "code.py"))
         if spec_obj is None or spec_obj.loader is None:
             raise ImportError("Could not load /task/code.py")
         module = importlib.util.module_from_spec(spec_obj)

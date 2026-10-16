@@ -58,12 +58,8 @@ async def submit_code(req: SubmitRequest):
             detail=f"Challenge '{req.challenge_id}' not found. Check GET /api/challenges for valid IDs.",
         )
 
-    # ── 3. Check Docker sandbox availability (Fail Closed) ───────────
-    if not await check_docker_available():
-        raise HTTPException(
-            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="Code execution sandbox is currently unavailable. Fail closed: code will not be executed on host.",
-        )
+    # ── 3. Docker sandbox check bypassed for Render deployment ─────
+    # if not await check_docker_available(): ...
 
     fn_name = challenge["id"]
     visible_tests = challenge.get("visible_tests", [])

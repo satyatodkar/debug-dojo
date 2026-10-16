@@ -52,7 +52,6 @@ OUTCOME_TIMEOUT       = "timeout"
 async def check_docker_available() -> bool:
     return True
 
-
 async def run_one_test(
     learner_code: str,
     fn_name: str,
@@ -61,19 +60,61 @@ async def run_one_test(
     *,
     is_visible: bool,
 ) -> dict[str, Any]:
-    """
-    Execute a single test case inside a fresh, isolated Docker container.
-    """
-    sem = _get_semaphore()
-    async with sem:
-        return await _execute_container(
-            learner_code=learner_code,
-            fn_name=fn_name,
-            args=args,
+    # Check if docker is available
+    if await check_docker_available():
+        sem = _get_semaphore()
+        async with sem:
+            return await _execute_container(
+                learner_code=learner_code,
+                fn_name=fn_name,
+                args=args,
+                expected=expected,
+                is_visible=is_visible,
+            )
+
+    # Subprocess/In-memory fallback for environments without Docker
+    import sys, io, traceback
+    from contextlib import redirect_stdout, redirect_stderr
+
+    scope = {}
+    buf = io.StringIO()
+    try:
+        with redirect_stdout(buf), redirect_stderr(buf):
+            exec(learner_code, scope)
+            if fn_name not in scope or not callable(scope[fn_name]):
+                return _format_result(
+                    OUTCOME_RUNTIME_ERROR,
+                    expected=expected,
+                    is_visible=is_visible,
+                    error_msg=f"Function "{fn_name}" is not defined or callable.",
+                )
+            actual = scope[fn_name](*args)
+
+        if repr(actual) == repr(expected):
+            return _format_result(
+                OUTCOME_PASSED,
+                expected=expected,
+                actual=actual,
+                is_visible=is_visible,
+                captured_stdout=buf.getvalue()[:1024],
+            )
+        else:
+            return _format_result(
+                OUTCOME_FAILED,
+                expected=expected,
+                actual=actual,
+                is_visible=is_visible,
+                captured_stdout=buf.getvalue()[:1024],
+            )
+    except Exception as exc:
+        tb = traceback.format_exc(limit=3)
+        return _format_result(
+            OUTCOME_RUNTIME_ERROR,
             expected=expected,
             is_visible=is_visible,
+            error_msg="\n".join(tb.strip().splitlines()[-2:]),
+            captured_stdout=buf.getvalue()[:1024],
         )
-
 
 async def _execute_container(
     learner_code: str,

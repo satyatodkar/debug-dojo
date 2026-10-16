@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debug Dojo — Interactive Python Debugging</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+
+  <!-- ===== TOP NAV ===== -->
+  <header class="navbar">
+    <div class="navbar-inner">
+      <div class="navbar-brand">
+        <span class="logo">🥋 Debug Dojo</span>
+        <span class="tagline">Interactive Python Debugging</span>
+      </div>
+
+      <!-- Navigation tabs -->
+      <nav class="nav-tabs" role="tablist" aria-label="Main Navigation">
+        <button id="nav-landing-btn" class="nav-tab active" role="tab" aria-selected="true" aria-controls="view-landing" data-view="landing">
+          Landing
+        </button>
+        <button id="nav-challenges-btn" class="nav-tab" role="tab" aria-selected="false" aria-controls="view-challenges" data-view="challenges">
+          Challenges
+        </button>
+        <button id="nav-workspace-btn" class="nav-tab" role="tab" aria-selected="false" aria-controls="view-workspace" data-view="workspace">
+          Workspace
+        </button>
+        <button id="nav-dashboard-btn" class="nav-tab" role="tab" aria-selected="false" aria-controls="view-dashboard" data-view="dashboard">
+          My Dashboard
+        </button>
+        <button id="nav-mobile-challenges-btn" class="nav-tab mobile-toggle" aria-label="Toggle Challenges List">
+          🥋 Challenges <span id="mobile-challenge-count" class="badge badge--sm">10</span>
+        </button>
+      </nav>
+
+      <div class="navbar-meta">
+        <span id="current-learner-badge" class="learner-id-badge">Learner: student1</span>
+        <span id="health-badge" class="badge badge--checking">Checking…</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== VIEW: LANDING ===== -->
+  <section id="view-landing" class="view">
+    <div class="hero">
+      <div class="hero-inner">
+        <h1>Level Up Your Python by <em>Finding the Bugs</em></h1>
+        <p class="hero-sub">
+          Debug Dojo teaches Python through authentic debugging. Inspect broken starter code,
+          run tests in an isolated sandbox, diagnose mistake patterns, and receive tiered hints.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW: CHALLENGES ===== -->
+  <section id="view-challenges" class="view hidden">
+    <div class="challenges-view">
+      <div class="challenges-view-header">
+        <div class="section-title-group">
+          <h2>🥋 Practice Challenges</h2>
+          <p class="section-subtitle">Pick any challenge to inspect its specifications, starter code, and test cases in the workspace.</p>
+        </div>
+      </div>
+      <div id="challenges-grid" class="challenges-grid" role="list">
+        <!-- Populated dynamically from allChallenges via API -->
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW: WORKSPACE ===== -->
+  <section id="view-workspace" class="view hidden">
+    <div class="workspace" id="workspace-container" role="region" aria-label="Coding Workspace">
+
+      <!-- ── LEFT: Challenge list sidebar ── -->
+      <aside class="sidebar" id="challenge-sidebar" role="navigation" aria-label="Challenges Catalogue">
+        <div class="sidebar-header">
+          <div class="sidebar-title-row">
+            <h2 class="sidebar-title">Challenges</h2>
+            <span id="challenge-count" class="badge badge--soon">10</span>
+          </div>
+          <!-- Search/Filter input -->
+          <div class="search-wrap">
+            <input type="text" id="challenge-search" class="challenge-search"
+                   placeholder="Search challenges or tags…"
+                   aria-label="Filter challenges by title or tag" />
+          </div>
+        </div>
+
+        <!-- Loading / error state -->
+        <p id="list-status" class="sidebar-status">Loading challenges…</p>
+
+        <!-- Challenge list rendered by JS -->
+        <ul id="challenge-list" class="challenge-list" role="list"></ul>
+      </aside>
+
+      <!-- ── RIGHT: Challenge detail & coding panel ── -->
+      <main class="detail-panel" id="detail-panel">
+
+        <!-- Placeholder shown before a challenge is selected -->
+        <div id="welcome-msg" class="welcome-msg">
+          <div class="welcome-icon" aria-hidden="true">🥋</div>
+          <h2>Select a Challenge to Begin</h2>
+          <p>Pick any challenge from the catalogue on the left to inspect its specifications,
+             starter code, and visible test cases.</p>
+          <button id="welcome-starter-btn" class="btn btn--primary">
+            ▶ Start Challenge #1: Last K Total
+          </button>
+        </div>
+
+        <!-- Challenge detail (hidden until a challenge loads) -->
+        <article id="challenge-detail" class="challenge-detail hidden">
+
+          <!-- Header -->
+          <div class="detail-header">
+            <div class="detail-meta">
+              <span id="d-number" class="tag"></span>
+              <span id="d-difficulty" class="difficulty"></span>
+            </div>
+            <h2 id="d-title" class="challenge-title"></h2>
+            <div id="d-tags" class="tag-row"></div>
+            <p id="d-desc" class="challenge-desc"></p>
+          </div>
+
+          <!-- Starter code section -->
+          <div class="code-section">
+            <div class="code-toolbar">
+              <label for="starter-code" class="code-label">
+                🐍 Python Code Editor <span class="hint">(edit to fix the bug)</span>
+              </label>
+              <div class="code-actions">
+                <span class="editor-tip">Tip: Press Tab to indent (4 spaces)</span>
+                <button id="reset-code-btn" class="btn btn--ghost btn--xs" title="Reset editor to original starter code">
+                  ↺ Reset Code
+                </button>
+              </div>
+            </div>
+            <div class="editor-wrap">
+              <textarea id="starter-code" class="code-editor"
+                        spellcheck="false" autocomplete="off"
+                        aria-label="Python code editor"></textarea>
+            </div>
+          </div>
+
+          <!-- Visible tests table -->
+          <div class="tests-section">
+            <div class="tests-header-row">
+              <span class="results-label">🧪 Visible Test Cases</span>
+              <span class="badge badge--soon">Sample inputs</span>
+            </div>
+            <div class="tests-table-wrap">
+              <table class="tests-table">
+                <thead>
+                  <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Test Label</th>
+                    <th scope="col">Function Call</th>
+                    <th scope="col">Expected Result</th>
+                  </tr>
+                </thead>
+                <tbody id="tests-body"></tbody>
+              </table>
+            </div>
+            <p class="hidden-note">
+              🔒 Additional hidden tests run inside the sandbox to evaluate edge cases without exposing test datasets.
+            </p>
+          </div>
+
+          <!-- Action row -->
+          <div class="action-row">
+            <button id="run-btn" class="btn btn--primary">
+              ▶ Run Tests
+            </button>
+            <span id="run-status" class="btn-note">Code executes in an isolated Docker sandbox</span>
+          </div>
+
+          <!-- Test results area -->
+          <div class="results-section">
+            <div class="results-header">
+              <span class="results-label">📋 Test Execution Results</span>
+              <span id="results-badge" class="badge badge--soon">Docker Sandbox</span>
+            </div>
+            <div id="test-results" class="results-box">
+              <p class="not-implemented">
+                Ready. Click <strong>Run Tests</strong> to test your solution against visible and hidden tests.
+              </p>
+            </div>
+          </div>
+
+          <!-- Progressive Hints Section -->
+          <div id="hints-section" class="hints-section hidden">
+            <div class="hints-header">
+              <div class="hints-title-wrap">
+                <span class="results-label">💡 Progressive Hints</span>
+                <span id="hint-counter-badge" class="badge badge--soon">0 / 3 revealed</span>
+              </div>
+              <button id="request-hint-btn" class="btn btn--secondary">
+                🔍 Request Next Hint
+              </button>
+            </div>
+            <div id="hints-display" class="hints-box">
+              <p class="hints-placeholder">
+                Click <strong>Request Next Hint</strong> when you're stuck for guided questions and conceptual clues.
+              </p>
+            </div>
+            <p id="hint-footer-note" class="hidden-note">
+              Hints provide guided questions without giving away the full solution.
+            </p>
+          </div>
+
+        </article>
+      </main>
+
+    </div><!-- /.workspace -->
+  </section>
+
+  <!-- ===== VIEW: MY DASHBOARD ===== -->
+  <section id="view-dashboard" class="view hidden">
+    <div class="dashboard-section" id="learner-dashboard" role="region" aria-label="Learner Progress and Mastery">
+      <div class="dashboard-inner">
+        <div class="dashboard-header">
+          <div class="dashboard-title-group">
+            <span class="dashboard-icon" aria-hidden="true">📊</span>
+            <div>
+              <h2>Learner Progress &amp; Concept Mastery</h2>
+              <p class="dashboard-subtitle">Real-time mastery estimates and recurring mistake analysis</p>
+            </div>
+          </div>
+          <div class="dashboard-quick-stats">
+            <div class="stat-pill">
+              <span class="stat-label">Submissions</span>
+              <span class="stat-val" id="stat-total-submissions">0</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-label">Completed</span>
+              <span class="stat-val" id="stat-passed-challenges">0 / 10</span>
+            </div>
+            <div class="stat-pill">
+              <span class="stat-label">Recurring Mistakes</span>
+              <span class="stat-val" id="stat-recurring-count">0</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="dashboard-grid">
+          <!-- ── Left Column: Concept Mastery Bars ── -->
+          <div class="dashboard-card mastery-card">
+            <div class="card-header">
+              <h3>🎯 Concept Mastery Breakdown</h3>
+              <span class="badge badge--soon">Deterministic Model</span>
+            </div>
+            <p class="card-desc">Mastery estimates based on clean passes (+25%), passes with hints (+15%), and attempts.</p>
+            <div class="mastery-bars" id="mastery-bars-container">
+              <p class="loading-text">Loading mastery data…</p>
+            </div>
+            <p class="mastery-disclaimer">
+              ℹ️ Mastery scores are deterministic estimates to guide practice, not an absolute skill exam.
+            </p>
+          </div>
+
+          <!-- ── Right Column: Recurring Mistakes & Recommendations ── -->
+          <div class="dashboard-card rec-card">
+            <!-- Recurring mistakes block -->
+            <div class="rec-section-sub">
+              <div class="card-header">
+                <h3>⚠️ Recurring Mistake Tracker</h3>
+                <span id="recurring-badge" class="badge badge--ok">Clean</span>
+              </div>
+              <div id="recurring-mistakes-container" class="recurring-container">
+                <p class="empty-state-text">No recurring mistakes detected across multiple challenges.</p>
+              </div>
+            </div>
+
+            <!-- Recommendation block -->
+            <div class="rec-section-sub">
+              <div class="card-header">
+                <h3>🥋 Recommended Next Challenge</h3>
+                <span id="rec-difficulty-badge" class="difficulty easy">Easy</span>
+              </div>
+              <div class="recommendation-content" id="rec-content">
+                <h4 id="rec-challenge-title" class="rec-title">Count Passes</h4>
+                <p id="rec-reason" class="rec-reason">Welcome to Debug Dojo! We recommend starting with 'Count Passes' to practice loops and conditionals.</p>
+                <div class="rec-action-row">
+                  <button id="open-recommended-btn" class="btn btn--primary btn--sm" data-id="count_passes">
+                    ▶ Jump to Challenge
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <p>🥋 <strong>Debug Dojo</strong> · Phase 6 Complete Experience · Built for beginners at a 24-hour hackathon 🚀</p>
+      <p class="footer-sub">Isolated Docker Execution · Deterministic Concept Mastery · Evidence-based Hints</p>
+    </div>
+  </footer>
+
+  <!-- Status hidden div needed for health-check logic in app.js -->
+  <div style="display:none">
+    <p id="status-detail"></p>
+  </div>
+
+  <script src="/static/app.js"></script>
+</body>
+</html>

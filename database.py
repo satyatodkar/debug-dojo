@@ -1,3 +1,19 @@
+import os
+from dotenv import load_dotenv
+from supabase import create_client, Client
+
+load_dotenv()
+
+SUPABASE_URL = os.environ.get("SUPABASE_URL")
+SUPABASE_KEY = os.environ.get("SUPABASE_KEY")
+
+supabase_client: Client = None
+if SUPABASE_URL and SUPABASE_KEY:
+    try:
+        supabase_client = create_client(SUPABASE_URL, SUPABASE_KEY)
+    except Exception as e:
+        print(f"[Supabase] Init error: {e}")
+
 """
 database.py  —  Debug Dojo Phase 5
 ==================================
@@ -224,6 +240,22 @@ def record_submission(sub_data: dict[str, Any]) -> None:
             """, (sub_id, tag))
 
         conn.commit()
+
+
+    # Sync to Supabase
+    if supabase_client:
+        try:
+            supabase_client.table("submissions").insert({
+                "learner_id": learner_id,
+                "challenge_id": str(challenge_id),
+                "code": code,
+                "status": "passed" if all_passed else "failed",
+                "tests_passed": 1 if all_passed else 0,
+                "tests_total": 1,
+                "error_message": summary if not all_passed else None
+            }).execute()
+        except Exception as sb_err:
+            print(f"[Supabase] Sync error: {sb_err}")
 
 
 def increment_submission_hint(submission_id: str) -> int:

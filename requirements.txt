@@ -1,2 +1,7 @@
 fastapi==0.115.12
 uvicorn[standard]==0.34.3
+postgrest==2.33.0
+realtime==2.33.0
+supabase==2.33.0
+supabase-auth==2.33.0
+supabase-functions==2.33.0

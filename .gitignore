@@ -1,11 +1,7 @@
-.venv/
 __pycache__/
-*.pyc
-.tasks/
-
-.venv/
-__pycache__/
-*.pyc
-.tasks/
-dojo.db
-
+*.py[cod]
+*$py.class
+venv/
+.DS_Store
+sandbox/dojo.db
+sandbox/.submissions.json

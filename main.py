@@ -17,18 +17,24 @@ from routers.challenges import router as challenges_router
 from routers.submit import router as submit_router
 from routers.hints import router as hints_router
 from routers.learner import router as learner_router
+from routers.exam import router as exam_router
+from routers.auth import router as auth_router
+from routers.account import router as account_router
 
 # ---------------------------------------------------------------------------
 # App setup
 # ---------------------------------------------------------------------------
 
-app = FastAPI(title="Debug Dojo", version="0.6.0")
+app = FastAPI(title="Debug Dojo", version="0.8.0")
 
 # Register routes
+app.include_router(auth_router)
+app.include_router(account_router)
 app.include_router(challenges_router)
 app.include_router(submit_router)
 app.include_router(hints_router)
 app.include_router(learner_router)
+app.include_router(exam_router)
 
 # Serve every file inside the "static/" folder automatically.
 # e.g. http://localhost:8000/static/style.css
@@ -40,9 +46,22 @@ app.mount("/static", StaticFiles(directory="static"), name="static")
 # ---------------------------------------------------------------------------
 
 @app.get("/")
+@app.get("/home")
+@app.get("/login")
+@app.get("/signup")
+@app.get("/account")
+@app.get("/challenges")
+@app.get("/workspace")
+@app.get("/dashboard")
 async def homepage():
-    """Return the main HTML page."""
+    """Return the main single-page application HTML page."""
     return FileResponse("static/index.html")
+
+
+@app.get("/exam")
+async def exam_page():
+    """Return the separate examination HTML page."""
+    return FileResponse("static/exam.html")
 
 
 @app.get("/api/health")

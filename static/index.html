@@ -12,48 +12,306 @@
   <header class="navbar">
     <div class="navbar-inner">
       <div class="navbar-brand">
-        <span class="logo">🥋 Debug Dojo</span>
-        <span class="tagline">Interactive Python Debugging</span>
+        <button class="brand-btn" id="brand-home-btn" aria-label="Debug Dojo Home">
+          <span class="logo">🥋 Debug Dojo</span>
+          <span class="tagline">Interactive Python Debugging</span>
+        </button>
       </div>
 
       <!-- Navigation tabs -->
       <nav class="nav-tabs" role="tablist" aria-label="Main Navigation">
-        <button id="nav-landing-btn" class="nav-tab active" role="tab" aria-selected="true" aria-controls="view-landing" data-view="landing">
-          Landing
+        <button id="nav-home-btn" class="nav-tab active" role="tab" aria-selected="true" aria-controls="view-home" data-view="home">
+          Home
         </button>
         <button id="nav-challenges-btn" class="nav-tab" role="tab" aria-selected="false" aria-controls="view-challenges" data-view="challenges">
           Challenges
         </button>
-        <button id="nav-workspace-btn" class="nav-tab" role="tab" aria-selected="false" aria-controls="view-workspace" data-view="workspace">
+        <button id="nav-workspace-btn" class="nav-tab hidden" role="tab" aria-selected="false" aria-controls="view-workspace" data-view="workspace">
           Workspace
         </button>
-        <button id="nav-dashboard-btn" class="nav-tab" role="tab" aria-selected="false" aria-controls="view-dashboard" data-view="dashboard">
+        <button id="nav-dashboard-btn" class="nav-tab hidden" role="tab" aria-selected="false" aria-controls="view-dashboard" data-view="dashboard">
           My Dashboard
+        </button>
+        <button id="nav-account-btn" class="nav-tab hidden" role="tab" aria-selected="false" aria-controls="view-account" data-view="account">
+          My Account
+        </button>
+        <button id="nav-landing-btn" class="nav-tab hidden" role="tab" aria-selected="false" aria-controls="view-home" data-view="home" style="display:none;" aria-hidden="true">
+          Home
         </button>
         <button id="nav-mobile-challenges-btn" class="nav-tab mobile-toggle" aria-label="Toggle Challenges List">
           🥋 Challenges <span id="mobile-challenge-count" class="badge badge--sm">10</span>
         </button>
       </nav>
 
-      <div class="navbar-meta">
-        <span id="current-learner-badge" class="learner-id-badge">Learner: student1</span>
-        <span id="health-badge" class="badge badge--checking">Checking…</span>
+      <!-- Auth Controls & Meta -->
+      <div class="navbar-actions">
+        <!-- Visitor actions: Login & Signup -->
+        <div id="nav-visitor-actions" class="visitor-actions">
+          <button id="nav-login-btn" class="btn btn--secondary btn--sm" data-view="login">Log In</button>
+          <button id="nav-signup-btn" class="btn btn--primary btn--sm" data-view="signup">Create Account</button>
+        </div>
+
+        <!-- Authenticated actions: User Chip & Logout -->
+        <div id="nav-user-actions" class="user-actions hidden">
+          <button id="nav-user-chip" class="user-chip-btn" data-view="account" aria-label="Open My Account">
+            <span id="nav-user-initials" class="user-chip-avatar">JD</span>
+            <span id="nav-user-name" class="user-chip-name">Jane Doe</span>
+          </button>
+          <button id="nav-logout-btn" class="btn btn--ghost btn--sm" title="Log Out">Log Out</button>
+        </div>
+
+        <div class="navbar-meta">
+          <span id="current-learner-badge" class="learner-id-badge">Learner: Guest</span>
+          <span id="health-badge" class="badge badge--checking">Checking…</span>
+        </div>
       </div>
     </div>
   </header>
 
-  <!-- ===== VIEW: LANDING ===== -->
-  <section id="view-landing" class="view">
-    <div class="hero">
-      <div class="hero-inner">
-        <h1>Level Up Your Python by <em>Finding the Bugs</em></h1>
+  <!-- ===== VIEW: SHARED HOMEPAGE (Consistent Layout Before and After Login) ===== -->
+  <section id="view-home" class="view">
+    <!-- Hero Section -->
+    <div class="landing-hero">
+      <div class="hero-glow-orb hero-glow-orb--left" aria-hidden="true"></div>
+      <div class="hero-glow-orb hero-glow-orb--right" aria-hidden="true"></div>
+      
+      <div class="landing-hero-inner">
+        <div class="hero-badge">
+          <span id="hero-badge-visitor"><span class="hero-badge-dot"></span> Python Debugging Education Platform</span>
+          <span id="hero-badge-auth" class="hidden"><span class="hero-badge-dot" style="background:var(--accent);"></span> 👋 Welcome back, <strong id="hero-user-name">Learner</strong>! · Active Learner</span>
+        </div>
+        <h1 class="hero-headline">Learn to Debug. Think Like a Programmer.</h1>
         <p class="hero-sub">
-          Debug Dojo teaches Python through authentic debugging. Inspect broken starter code,
-          run tests in an isolated sandbox, diagnose mistake patterns, and receive tiered hints.
+          Stop guessing why your code fails. Practise real Python challenges, discover your recurring mistakes, and improve through progressive hints that teach you how to solve problems yourself.
         </p>
+
+        <!-- Unauthenticated Hero CTAs -->
+        <div id="hero-visitor-ctas" class="hero-cta-group">
+          <button id="hero-start-learning-btn" class="btn btn--primary btn--lg" data-view="signup">
+            Start Learning <span class="btn-arrow" aria-hidden="true">→</span>
+          </button>
+          <a href="#core-features" id="hero-explore-features-btn" class="btn btn--secondary btn--lg">
+            Explore Features <span class="btn-arrow" aria-hidden="true">↓</span>
+          </a>
+        </div>
+
+        <!-- Authenticated Hero CTAs -->
+        <div id="hero-auth-ctas" class="hero-cta-group hidden">
+          <button id="hero-resume-btn" class="btn btn--primary btn--lg" data-view="challenges">
+            Explore Challenges <span class="btn-arrow" aria-hidden="true">→</span>
+          </button>
+          <button id="hero-dashboard-btn" class="btn btn--secondary btn--lg" data-view="dashboard">
+            My Dashboard <span class="btn-arrow" aria-hidden="true">📊</span>
+          </button>
+        </div>
+
+        <!-- Visual Coding Workspace Representation -->
+        <div class="hero-workspace-mockup" aria-label="Debug Dojo Interactive Coding Workspace Preview">
+          <div class="mockup-header">
+            <div class="mockup-window-dots" aria-hidden="true">
+              <span class="dot dot--red"></span>
+              <span class="dot dot--yellow"></span>
+              <span class="dot dot--green"></span>
+            </div>
+            <div class="mockup-tabs">
+              <span class="mockup-tab active">
+                <span class="file-icon" aria-hidden="true">🐍</span> last_k_total.py
+              </span>
+              <span class="mockup-tab">
+                <span class="file-icon" aria-hidden="true">🧪</span> test_solution.py
+              </span>
+            </div>
+            <div class="mockup-runner-badge">
+              <span class="runner-dot"></span> Docker Sandbox Active (Isolated)
+            </div>
+          </div>
+          <div class="mockup-body">
+            <div class="mockup-code">
+              <div class="code-line"><span class="line-no">1</span><span class="code-kw">def</span> <span class="code-fn">last_k_total</span>(numbers, k):</div>
+              <div class="code-line"><span class="line-no">2</span>    <span class="code-comment"># Fixed: handle k larger than list length</span></div>
+              <div class="code-line"><span class="line-no">3</span>    <span class="code-kw">if</span> k &lt;= 0:</div>
+              <div class="code-line"><span class="line-no">4</span>        <span class="code-kw">return</span> 0</div>
+              <div class="code-line highlight-fix"><span class="line-no">5</span>    <span class="code-kw">return</span> <span class="code-fn">sum</span>(numbers[-k:])  <span class="code-comment"># ✓ Clean list slice</span></div>
+            </div>
+            <div class="mockup-terminal">
+              <div class="terminal-bar">
+                <span class="terminal-title">Runner Output (0.04s)</span>
+                <span class="badge badge--ok badge--sm">✓ Tests Passed</span>
+              </div>
+              <div class="terminal-content">
+                <div class="t-line t-pass">✓ test_normal_slice: last_k_total([10, 20, 30], 2) == 50</div>
+                <div class="t-line t-pass">✓ test_k_zero: last_k_total([1, 2, 3], 0) == 0</div>
+                <div class="t-line t-pass">✓ test_k_large: last_k_total([5, 10], 5) == 15</div>
+                <div class="t-line t-info">ℹ Docker resource check: 18MB RAM · 0 network calls · Safe sandbox</div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
+
+    <!-- Authenticated Quick Learning Summary (Only rendered when user is logged in with valid data) -->
+    <div id="home-auth-summary" class="home-auth-summary-container hidden">
+      <div class="home-auth-summary-card">
+        <div class="home-auth-summary-header">
+          <div class="auth-summary-title-wrap">
+            <span class="badge badge--soon">⚡ Personal Learning Snapshot</span>
+            <h3 class="auth-summary-title">Your Progress at a Glance</h3>
+          </div>
+          <button class="btn btn--ghost btn--xs" data-view="dashboard">View Detailed Analytics in My Dashboard →</button>
+        </div>
+
+        <div class="home-auth-summary-grid">
+          <div class="home-summary-stat-box">
+            <span class="stat-num" id="home-stat-passed">0 / 10</span>
+            <span class="stat-desc">Challenges Completed</span>
+          </div>
+          <div class="home-summary-stat-box">
+            <span class="stat-num" id="home-stat-submissions">0</span>
+            <span class="stat-desc">Docker Evaluations</span>
+          </div>
+          <div class="home-summary-stat-box">
+            <span class="stat-badge-wrap" id="home-stat-mistakes-wrap">
+              <span id="home-stat-mistakes-badge" class="badge badge--ok">Clean</span>
+            </span>
+            <span class="stat-desc">Recurring Mistakes</span>
+          </div>
+          <div class="home-summary-rec-box">
+            <div class="rec-mini-meta">
+              <span class="rec-tag">Recommended Next:</span>
+              <span id="home-rec-diff" class="difficulty easy">Easy</span>
+            </div>
+            <h4 id="home-rec-name" class="rec-mini-title">Count Passes</h4>
+            <button id="home-rec-btn" class="btn btn--primary btn--xs">Practise in Workspace →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Core Features Section (Shared) -->
+    <section id="core-features" class="landing-section">
+      <div class="landing-section-inner">
+        <div class="section-header-centered">
+          <span class="section-eyebrow">Key Capabilities</span>
+          <h2 class="section-heading">Engineered for Authentic Mastery</h2>
+          <p class="section-subtext">Debug Dojo bridges the gap between reading code and debugging real failures under time pressure.</p>
+        </div>
+
+        <div class="features-grid">
+          <!-- Feature 1 -->
+          <article class="feature-card">
+            <div class="feature-icon-wrap feature-icon-wrap--shield">
+              <span class="feature-icon" aria-hidden="true">🛡️</span>
+            </div>
+            <h3 class="feature-title">Secure Code Execution</h3>
+            <p class="feature-lead">Run Python solutions within a restricted, resource-limited execution environment.</p>
+            <p class="feature-detail">
+              Every learner submission runs inside a disposable container with hard CPU limits, 128MB RAM ceilings, strict timeouts, and disabled network access.
+            </p>
+          </article>
+
+          <!-- Feature 2 -->
+          <article class="feature-card">
+            <div class="feature-icon-wrap feature-icon-wrap--bulb">
+              <span class="feature-icon" aria-hidden="true">💡</span>
+            </div>
+            <h3 class="feature-title">Progressive Hints</h3>
+            <p class="feature-lead">Receive helpful guidance without being handed the entire answer.</p>
+            <p class="feature-detail">
+              A 3-tier progressive hint ladder provides structured scaffolding: guided self-reflection first, conceptual logic clues next, and boundary checks only when you truly need them.
+            </p>
+          </article>
+
+          <!-- Feature 3 -->
+          <article class="feature-card">
+            <div class="feature-icon-wrap feature-icon-wrap--stats">
+              <span class="feature-icon" aria-hidden="true">📊</span>
+            </div>
+            <h3 class="feature-title">Personal Learning Intelligence</h3>
+            <p class="feature-lead">Identify recurring mistakes, monitor mastery estimates, and practise recommended challenges.</p>
+            <p class="feature-detail">
+              Deterministic skill models compute mastery across core Python topics (loops, slicing, conditionals) and detect persistent error patterns to recommend targeted practice.
+            </p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <!-- How It Works Section (Shared) -->
+    <section id="how-it-works" class="landing-section landing-section--alt">
+      <div class="landing-section-inner">
+        <div class="section-header-centered">
+          <span class="section-eyebrow">Structured Process</span>
+          <h2 class="section-heading">How It Works</h2>
+          <p class="section-subtext">A predictable, proven rhythm to transform bug frustration into programming confidence.</p>
+        </div>
+
+        <div class="steps-grid">
+          <div class="step-card">
+            <div class="step-num">1</div>
+            <h3 class="step-title">Choose a Python challenge.</h3>
+            <p class="step-desc">
+              Browse our curated catalogue of realistic programming tasks containing authentic bugs across logic, boundaries, and syntax.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">2</div>
+            <h3 class="step-title">Run your code and understand the failure.</h3>
+            <p class="step-desc">
+              Execute test suites inside the isolated Docker sandbox, examine actual vs expected assertions, and diagnose why the bug occurred.
+            </p>
+          </div>
+
+          <div class="step-card">
+            <div class="step-num">3</div>
+            <h3 class="step-title">Improve through hints and personalized practice.</h3>
+            <p class="step-desc">
+              Request progressive guidance if stuck, track your mastery dashboard, and transition to timed, anti-cheating formal examinations.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action Banner (Shared Structure, Adapted Actions) -->
+    <section class="landing-cta-section">
+      <!-- Unauthenticated CTA Box -->
+      <div id="cta-visitor-box" class="landing-cta-box">
+        <h2 class="cta-title">Start Mastering Python Debugging Today</h2>
+        <p class="cta-subtitle">
+          Join Debug Dojo now to save your learning history, tackle timed exams, and build deep problem-solving skills.
+        </p>
+        <div class="cta-buttons">
+          <button id="cta-signup-btn" class="btn btn--primary btn--lg" data-view="signup">
+            Create Free Account
+          </button>
+          <button id="cta-login-btn" class="btn btn--secondary btn--lg" data-view="login">
+            Log In to Existing Account
+          </button>
+        </div>
+      </div>
+
+      <!-- Authenticated CTA Box -->
+      <div id="cta-auth-box" class="landing-cta-box hidden">
+        <h2 class="cta-title">Ready to Level Up Your Debugging?</h2>
+        <p class="cta-subtitle">
+          Jump straight into the practice catalogue or review your skill progress on My Dashboard.
+        </p>
+        <div class="cta-buttons">
+          <button class="btn btn--primary btn--lg" data-view="challenges">
+            Browse Challenges →
+          </button>
+          <button class="btn btn--secondary btn--lg" data-view="dashboard">
+            Open My Dashboard 📊
+          </button>
+        </div>
+      </div>
+    </section>
   </section>
+
+  <!-- Invisible container alias for backward compatibility -->
+  <div id="view-landing" class="view hidden" aria-hidden="true" style="display:none;"></div>
 
   <!-- ===== VIEW: CHALLENGES ===== -->
   <section id="view-challenges" class="view hidden">
@@ -173,8 +431,14 @@
             <button id="run-btn" class="btn btn--primary">
               ▶ Run Tests
             </button>
+            <button id="start-exam-workspace-btn" class="btn btn--secondary" title="Open this challenge in an official examination panel in a separate tab">
+              🎓 Start Exam
+            </button>
             <span id="run-status" class="btn-note">Code executes in an isolated Docker sandbox</span>
           </div>
+
+          <!-- Exam launch feedback & fallback notice -->
+          <div id="exam-launch-banner" class="exam-launch-banner hidden" role="alert" aria-live="polite"></div>
 
           <!-- Test results area -->
           <div class="results-section">
@@ -220,76 +484,360 @@
   <section id="view-dashboard" class="view hidden">
     <div class="dashboard-section" id="learner-dashboard" role="region" aria-label="Learner Progress and Mastery">
       <div class="dashboard-inner">
+        <!-- Dashboard Top Header -->
         <div class="dashboard-header">
           <div class="dashboard-title-group">
             <span class="dashboard-icon" aria-hidden="true">📊</span>
             <div>
-              <h2>Learner Progress &amp; Concept Mastery</h2>
-              <p class="dashboard-subtitle">Real-time mastery estimates and recurring mistake analysis</p>
+              <h2>My Learning Dashboard</h2>
+              <p class="dashboard-subtitle">Your single destination for authentic learning statistics, concept mastery, error diagnosis, and recommended practice.</p>
             </div>
           </div>
           <div class="dashboard-quick-stats">
-            <div class="stat-pill">
-              <span class="stat-label">Submissions</span>
-              <span class="stat-val" id="stat-total-submissions">0</span>
-            </div>
-            <div class="stat-pill">
-              <span class="stat-label">Completed</span>
-              <span class="stat-val" id="stat-passed-challenges">0 / 10</span>
-            </div>
-            <div class="stat-pill">
-              <span class="stat-label">Recurring Mistakes</span>
-              <span class="stat-val" id="stat-recurring-count">0</span>
-            </div>
+            <button class="btn btn--secondary btn--sm" data-view="workspace">💻 Open Workspace</button>
           </div>
         </div>
 
-        <div class="dashboard-grid">
-          <!-- ── Left Column: Concept Mastery Bars ── -->
-          <div class="dashboard-card mastery-card">
+        <div class="dashboard-sections-stack">
+          <!-- ── SECTION A: Learning Statistics & Activity ── -->
+          <div class="dashboard-card full-width-card" id="section-learning-stats">
             <div class="card-header">
-              <h3>🎯 Concept Mastery Breakdown</h3>
+              <div>
+                <h3>📊 Learning Statistics &amp; Activity</h3>
+                <p class="card-desc">Authentic summary of your challenge attempts, pass rates, and evaluated code executions.</p>
+              </div>
+              <span class="badge badge--ok">Authentic Records</span>
+            </div>
+
+            <!-- 4 Stat Metric Cards -->
+            <div class="dash-stats-grid">
+              <div class="dash-stat-box">
+                <span class="dash-stat-num" id="stat-attempted-challenges">0</span>
+                <span class="dash-stat-label">Challenges Attempted</span>
+              </div>
+              <div class="dash-stat-box">
+                <span class="dash-stat-num" id="stat-passed-challenges">0 / 10</span>
+                <span class="dash-stat-label">Challenges Passed</span>
+              </div>
+              <div class="dash-stat-box">
+                <span class="dash-stat-num" id="stat-pass-rate">0%</span>
+                <span class="dash-stat-label">Pass Rate</span>
+              </div>
+              <div class="dash-stat-box">
+                <span class="dash-stat-num" id="stat-total-submissions">0</span>
+                <span class="dash-stat-label">Total Code Submissions</span>
+              </div>
+            </div>
+
+            <!-- Recent Learning Activity Sub-section -->
+            <div class="dash-recent-activity-section">
+              <div class="sub-header-row">
+                <h4 class="sub-heading">⏱️ Recent Learning Activity</h4>
+                <span class="sub-heading-note">Latest submissions evaluated in the Docker sandbox</span>
+              </div>
+              <div id="dash-recent-activity-list" class="dash-activity-list">
+                <p class="empty-state-text">No challenge submissions recorded yet. Pick a challenge in Workspace to begin!</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ── SECTION B: Concept Mastery Breakdown ── -->
+          <div class="dashboard-card mastery-card full-width-card" id="section-concept-mastery">
+            <div class="card-header">
+              <div>
+                <h3>🎯 Concept Mastery Breakdown</h3>
+                <p class="card-desc">Deterministic estimates based on clean passes (+25%), passes with hints (+15%), and unpassed concepts (0%).</p>
+              </div>
               <span class="badge badge--soon">Deterministic Model</span>
             </div>
-            <p class="card-desc">Mastery estimates based on clean passes (+25%), passes with hints (+15%), and attempts.</p>
             <div class="mastery-bars" id="mastery-bars-container">
               <p class="loading-text">Loading mastery data…</p>
             </div>
             <p class="mastery-disclaimer">
-              ℹ️ Mastery scores are deterministic estimates to guide practice, not an absolute skill exam.
+              ℹ️ <strong>Deterministic Mastery Formula:</strong> Clean pass without hints awards <strong>+25%</strong> per tagged concept; pass after hints awards <strong>+15%</strong>; failed attempts receive <strong>0%</strong> pass reward (no penalty to earned mastery). Maximum score is <strong>100%</strong>. Duplicate submissions cannot award mastery again. Mastery scores are deterministic estimates to guide practice, not an absolute measure of ability.
             </p>
           </div>
 
-          <!-- ── Right Column: Recurring Mistakes & Recommendations ── -->
-          <div class="dashboard-card rec-card">
-            <!-- Recurring mistakes block -->
-            <div class="rec-section-sub">
-              <div class="card-header">
-                <h3>⚠️ Recurring Mistake Tracker</h3>
-                <span id="recurring-badge" class="badge badge--ok">Clean</span>
+          <!-- ── SECTION C: Recurring Mistakes Analysis ── -->
+          <div class="dashboard-card mistakes-analysis-card full-width-card" id="section-recurring-mistakes">
+            <div class="card-header">
+              <div>
+                <h3>⚠️ Recurring Mistakes Analysis</h3>
+                <p class="card-desc">Confirmed recurring categories requiring failures across at least two distinct challenges for your account.</p>
               </div>
-              <div id="recurring-mistakes-container" class="recurring-container">
-                <p class="empty-state-text">No recurring mistakes detected across multiple challenges.</p>
+              <span id="recurring-badge" class="badge badge--ok">Clean</span>
+            </div>
+
+            <!-- Mistakes Summary Metrics Banner -->
+            <div class="mistakes-metrics-banner">
+              <div class="metric-block">
+                <span class="metric-num" id="distinct-recurring-count">0</span>
+                <span class="metric-label">Recurring Categories</span>
+              </div>
+              <div class="metric-block">
+                <span class="metric-num" id="affected-challenges-count">0</span>
+                <span class="metric-label">Affected Challenges</span>
+              </div>
+              <div class="metric-block">
+                <span class="metric-val" id="most-frequent-mistake">None</span>
+                <span class="metric-label">Most Frequent Category</span>
               </div>
             </div>
 
-            <!-- Recommendation block -->
-            <div class="rec-section-sub">
-              <div class="card-header">
-                <h3>🥋 Recommended Next Challenge</h3>
-                <span id="rec-difficulty-badge" class="difficulty easy">Easy</span>
+            <!-- Recurring Mistakes Container -->
+            <div id="recurring-mistakes-container" class="recurring-container">
+              <p class="empty-state-text">✓ No recurring mistakes detected across multiple challenges.</p>
+            </div>
+          </div>
+
+          <!-- ── SECTION D: Recommended Practice ── -->
+          <div class="dashboard-card rec-card full-width-card" id="section-recommended-practice">
+            <div class="card-header">
+              <div>
+                <h3>🥋 Recommended Practice</h3>
+                <p class="card-desc">Evidence-based recommendation targeting your confirmed recurring mistakes or lowest mastery area.</p>
               </div>
-              <div class="recommendation-content" id="rec-content">
+              <span id="rec-difficulty-badge" class="difficulty easy">Easy</span>
+            </div>
+            <div class="recommendation-content" id="rec-content">
+              <div class="rec-title-row">
                 <h4 id="rec-challenge-title" class="rec-title">Count Passes</h4>
-                <p id="rec-reason" class="rec-reason">Welcome to Debug Dojo! We recommend starting with 'Count Passes' to practice loops and conditionals.</p>
-                <div class="rec-action-row">
-                  <button id="open-recommended-btn" class="btn btn--primary btn--sm" data-id="count_passes">
-                    ▶ Jump to Challenge
-                  </button>
-                </div>
+                <div id="rec-tags-container" class="rec-tags-container"></div>
+              </div>
+              <p id="rec-reason" class="rec-reason">Welcome to Debug Dojo! We recommend starting with 'Count Passes' to practice loops and conditionals.</p>
+              <div class="rec-action-row">
+                <button id="open-recommended-btn" class="btn btn--primary" data-id="count_passes">
+                  ▶ Practice This Challenge in Workspace
+                </button>
               </div>
             </div>
           </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW: SIGNUP ===== -->
+  <section id="view-signup" class="view hidden">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo" aria-hidden="true">🥋</div>
+          <h2>Create Your Account</h2>
+          <p class="auth-subtitle">Join Debug Dojo to track your learning journey, save code, and master Python debugging.</p>
+        </div>
+
+        <form id="signup-form" class="auth-form" novalidate>
+          <!-- Full Name -->
+          <div class="form-group">
+            <label for="signup-name" class="form-label">Full Name <span class="req">*</span></label>
+            <input type="text" id="signup-name" name="name" class="form-input" placeholder="e.g. Ada Lovelace" autocomplete="name" required />
+            <span id="signup-name-err" class="form-field-err hidden"></span>
+          </div>
+
+          <!-- Email -->
+          <div class="form-group">
+            <label for="signup-email" class="form-label">Email Address <span class="req">*</span></label>
+            <input type="email" id="signup-email" name="email" class="form-input" placeholder="you@example.com" autocomplete="email" inputmode="email" autocorrect="off" spellcheck="false" required />
+            <span id="signup-email-err" class="form-field-err hidden"></span>
+          </div>
+
+          <!-- Optional Age -->
+          <div class="form-group">
+            <label for="signup-age" class="form-label">Age <span class="opt">(Optional)</span></label>
+            <input type="number" id="signup-age" name="age" class="form-input" placeholder="e.g. 21" min="1" max="120" />
+            <span id="signup-age-err" class="form-field-err hidden"></span>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="signup-password" class="form-label">Password <span class="req">*</span></label>
+            <div class="input-password-wrap">
+              <input type="password" id="signup-password" name="password" class="form-input" placeholder="At least 8 characters" autocomplete="new-password" minlength="8" required />
+              <button type="button" id="toggle-signup-pwd" class="btn-toggle-pwd" aria-label="Toggle password visibility">👁</button>
+            </div>
+            <p class="form-hint">Must be at least 8 characters long.</p>
+            <span id="signup-password-err" class="form-field-err hidden"></span>
+          </div>
+
+          <!-- Confirm Password -->
+          <div class="form-group">
+            <label for="signup-confirm-password" class="form-label">Confirm Password <span class="req">*</span></label>
+            <div class="input-password-wrap">
+              <input type="password" id="signup-confirm-password" name="confirm_password" class="form-input" placeholder="Re-enter password" autocomplete="new-password" minlength="8" required />
+              <button type="button" id="toggle-signup-confirm-pwd" class="btn-toggle-pwd" aria-label="Toggle confirm password visibility">👁</button>
+            </div>
+            <span id="signup-confirm-err" class="form-field-err hidden"></span>
+          </div>
+
+          <!-- Global Error/Success Banner -->
+          <div id="signup-alert" class="auth-alert hidden" role="alert"></div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="signup-submit-btn" class="btn btn--primary btn--block">
+            <span class="btn-text">Create Account</span>
+            <span class="btn-spinner hidden">Creating account…</span>
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Already have an account? <button type="button" id="link-to-login" class="link-btn" data-view="login">Log in here</button></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW: LOGIN ===== -->
+  <section id="view-login" class="view hidden">
+    <div class="auth-container">
+      <div class="auth-card">
+        <div class="auth-header">
+          <div class="auth-logo" aria-hidden="true">🥋</div>
+          <h2>Welcome Back</h2>
+          <p class="auth-subtitle">Log in to Debug Dojo with your registered email and password.</p>
+        </div>
+
+        <form id="login-form" class="auth-form" novalidate>
+          <!-- Email -->
+          <div class="form-group">
+            <label for="login-email" class="form-label">Registered Email <span class="req">*</span></label>
+            <input type="email" id="login-email" name="email" class="form-input" placeholder="you@example.com" autocomplete="email" inputmode="email" autocorrect="off" spellcheck="false" required />
+            <span id="login-email-err" class="form-field-err hidden"></span>
+          </div>
+
+          <!-- Password -->
+          <div class="form-group">
+            <label for="login-password" class="form-label">Password <span class="req">*</span></label>
+            <div class="input-password-wrap">
+              <input type="password" id="login-password" name="password" class="form-input" placeholder="Enter your password" autocomplete="current-password" required />
+              <button type="button" id="toggle-login-pwd" class="btn-toggle-pwd" aria-label="Toggle password visibility">👁</button>
+            </div>
+            <span id="login-password-err" class="form-field-err hidden"></span>
+          </div>
+
+          <!-- Global Error/Success Banner -->
+          <div id="login-alert" class="auth-alert hidden" role="alert"></div>
+
+          <!-- Submit Button -->
+          <button type="submit" id="login-submit-btn" class="btn btn--primary btn--block">
+            <span class="btn-text">Log In</span>
+            <span class="btn-spinner hidden">Authenticating…</span>
+          </button>
+        </form>
+
+        <div class="auth-footer">
+          <p>Don't have an account? <button type="button" id="link-to-signup" class="link-btn" data-view="signup">Create an account</button></p>
+          <p class="auth-recovery-note">Forgot your password? Please reach out to your instructor or event administrator. (Automated email reset is not configured for this hackathon environment.)</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== VIEW: MY ACCOUNT ===== -->
+  <section id="view-account" class="view hidden">
+    <div class="account-container">
+      <div class="account-header">
+        <div class="account-header-left">
+          <span class="account-avatar-large" id="acc-avatar-large">JD</span>
+          <div>
+            <h2 id="acc-header-name">Jane Doe</h2>
+            <p id="acc-header-email" class="account-header-email">jane@example.com</p>
+          </div>
+        </div>
+        <div class="account-header-right">
+          <span id="acc-status-badge" class="badge badge--ok">Active Learner</span>
+          <button id="account-top-logout-btn" class="btn btn--secondary btn--sm">Log Out</button>
+        </div>
+      </div>
+
+      <div class="account-grid">
+        <!-- ── Card 1: Personal Information & Profile Settings ── -->
+        <div class="account-card">
+          <div class="card-header">
+            <h3>👤 Personal Information</h3>
+            <span class="badge badge--soon">Editable</span>
+          </div>
+          <p class="card-desc">Update your personal profile details. Email address is read-only to safeguard account identity.</p>
+
+          <form id="profile-edit-form" class="profile-form">
+            <div class="form-group">
+              <label for="acc-fullname" class="form-label">Full Name <span class="req">*</span></label>
+              <input type="text" id="acc-fullname" class="form-input" required autocomplete="name" />
+            </div>
+
+            <div class="form-group">
+              <label for="acc-email" class="form-label">Registered Email</label>
+              <input type="email" id="acc-email" class="form-input" readonly disabled title="Email address cannot be changed to safeguard account identity" />
+              <p class="form-hint">Email address cannot be changed to safeguard account identity.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="acc-age" class="form-label">Age <span class="opt">(Optional)</span></label>
+              <input type="number" id="acc-age" class="form-input" min="1" max="120" placeholder="Optional" />
+            </div>
+
+            <div class="profile-meta-row">
+              <div class="profile-meta-item">
+                <span class="meta-label">Member Since:</span>
+                <span id="acc-created-at" class="meta-val">--</span>
+              </div>
+              <div class="profile-meta-item">
+                <span class="meta-label">User ID:</span>
+                <span id="acc-user-id" class="meta-val font-mono">--</span>
+              </div>
+            </div>
+
+            <div id="profile-feedback" class="auth-alert hidden" role="alert"></div>
+
+            <div class="form-actions-row">
+              <button type="submit" id="save-profile-btn" class="btn btn--primary btn--sm">Save Changes</button>
+              <button type="button" id="cancel-profile-btn" class="btn btn--secondary btn--sm">Cancel</button>
+            </div>
+          </form>
+        </div>
+
+        <!-- ── Card 2: Account Security ── -->
+        <div class="account-card account-card--security">
+          <div class="card-header">
+            <h3>🔒 Account Security</h3>
+            <span class="badge badge--soon">Argon2id Encrypted</span>
+          </div>
+          <p class="card-desc">Manage your password and authentication security. Passwords are never stored in plaintext.</p>
+
+          <form id="change-password-form" class="pwd-form">
+            <div class="form-group">
+              <label for="current-pwd" class="form-label">Current Password <span class="req">*</span></label>
+              <div class="input-password-wrap">
+                <input type="password" id="current-pwd" class="form-input" required autocomplete="current-password" />
+                <button type="button" id="toggle-cur-pwd" class="btn-toggle-pwd" aria-label="Toggle password">👁</button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="new-pwd" class="form-label">New Password <span class="req">*</span></label>
+              <div class="input-password-wrap">
+                <input type="password" id="new-pwd" class="form-input" minlength="8" required autocomplete="new-password" />
+                <button type="button" id="toggle-new-pwd" class="btn-toggle-pwd" aria-label="Toggle password">👁</button>
+              </div>
+              <p class="form-hint">At least 8 characters long.</p>
+            </div>
+
+            <div class="form-group">
+              <label for="confirm-new-pwd" class="form-label">Confirm New Password <span class="req">*</span></label>
+              <div class="input-password-wrap">
+                <input type="password" id="confirm-new-pwd" class="form-input" minlength="8" required autocomplete="new-password" />
+                <button type="button" id="toggle-conf-pwd" class="btn-toggle-pwd" aria-label="Toggle password">👁</button>
+              </div>
+            </div>
+
+            <div id="pwd-feedback" class="auth-alert hidden" role="alert"></div>
+
+            <div class="security-actions-row">
+              <button type="submit" id="save-pwd-btn" class="btn btn--primary btn--sm">Update Password</button>
+              <button type="button" id="acc-logout-bottom-btn" class="btn btn--secondary btn--sm">Log Out</button>
+            </div>
+          </form>
         </div>
       </div>
     </div>
@@ -298,8 +846,52 @@
   <!-- ===== FOOTER ===== -->
   <footer class="footer">
     <div class="footer-inner">
-      <p>🥋 <strong>Debug Dojo</strong> · Phase 6 Complete Experience · Built for beginners at a 24-hour hackathon 🚀</p>
-      <p class="footer-sub">Isolated Docker Execution · Deterministic Concept Mastery · Evidence-based Hints</p>
+      <div class="footer-top-grid">
+        <div class="footer-brand-col">
+          <div class="footer-brand">🥋 <strong>Debug Dojo</strong></div>
+          <p class="footer-desc">
+            An interactive Python debugging education platform designed to develop deep code literacy, systematic error diagnosis, and authentic programming problem-solving.
+          </p>
+          <div class="footer-pills">
+            <span class="badge badge--ok badge--sm">Docker Sandbox</span>
+            <span class="badge badge--soon badge--sm">Argon2id Auth</span>
+            <span class="badge badge--sm">Mastery Analytics</span>
+          </div>
+        </div>
+
+        <div class="footer-links-col">
+          <div class="footer-col-title">Platform</div>
+          <ul class="footer-links">
+            <li><button class="footer-link-btn" data-view="landing">Home</button></li>
+            <li><button class="footer-link-btn" data-view="challenges">Challenge Catalogue</button></li>
+            <li><button class="footer-link-btn" data-view="workspace">Coding Workspace</button></li>
+            <li><button class="footer-link-btn" data-view="dashboard">Learner Dashboard</button></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <div class="footer-col-title">Account</div>
+          <ul class="footer-links">
+            <li><button class="footer-link-btn" data-view="login">Log In</button></li>
+            <li><button class="footer-link-btn" data-view="signup">Create Account</button></li>
+            <li><button class="footer-link-btn" data-view="account">My Account</button></li>
+          </ul>
+        </div>
+
+        <div class="footer-links-col">
+          <div class="footer-col-title">Examination</div>
+          <ul class="footer-links">
+            <li><span class="footer-text">Timed Examination Mode</span></li>
+            <li><span class="footer-text">Anti-Paste Protection</span></li>
+            <li><span class="footer-text">Hidden Test Isolation</span></li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="footer-bottom-row">
+        <p>© Debug Dojo · Phase Complete Hackathon Edition 🚀</p>
+        <p class="footer-sub">Built with FastAPI, Docker, SQLite &amp; Vanilla JS · Zero Mock Data</p>
+      </div>
     </div>
   </footer>
 
@@ -308,6 +900,7 @@
     <p id="status-detail"></p>
   </div>
 
+  <script src="/static/anime.min.js"></script>
   <script src="/static/app.js"></script>
 </body>
 </html>

@@ -8,9 +8,10 @@ using isolated Docker containers.
 import asyncio
 import uuid
 from typing import Any
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException, status, Request
 from pydantic import BaseModel, Field
 
+from auth_utils import get_optional_user
 from challenges import CHALLENGE_BY_ID, HIDDEN_TESTS
 from sandbox.docker_executor import (
     run_one_test,
@@ -36,11 +37,14 @@ class SubmitRequest(BaseModel):
 
 
 @router.post("/submit")
-async def submit_code(req: SubmitRequest):
+async def submit_code(req: SubmitRequest, request: Request):
     """
     Validate learner submission, execute tests one by one in Docker containers,
     and return structured test outcomes.
+    Derives learner_id from authenticated session when logged in.
     """
+    opt_user = await get_optional_user(request)
+    effective_learner_id = opt_user["user_id"] if opt_user else req.learner_id.strip()
     # ── 1. Validate code size ─────────────────────────────────────────
     code_bytes = len(req.code.encode("utf-8", errors="replace"))
     if code_bytes > MAX_CODE_BYTES:
@@ -81,6 +85,8 @@ async def submit_code(req: SubmitRequest):
             "outcome": res.get("outcome"),
             "expected": res.get("expected"),
             "actual": res.get("actual"),
+            "details": res.get("details", ""),
+            "execution_time": res.get("execution_time", 0.0),
         }
 
     # ── 5. Execute hidden tests concurrently (bounded by semaphore) ───
@@ -92,10 +98,12 @@ async def submit_code(req: SubmitRequest):
             expected=ht.get("expected"),
             is_visible=False,
         )
-        # Disclose only test identifier and outcome
+        # Disclose only test identifier, outcome, safe details description, and execution time
         return {
             "test_id": idx + 1,
             "outcome": res.get("outcome"),
+            "details": res.get("details", ""),
+            "execution_time": res.get("execution_time", 0.0),
         }
 
     visible_outcomes = await asyncio.gather(
@@ -134,7 +142,7 @@ async def submit_code(req: SubmitRequest):
 
     sub_payload = {
         "submission_id": submission_id,
-        "learner_id": req.learner_id,
+        "learner_id": effective_learner_id,
         "challenge_id": challenge["id"],
         "code": req.code,
         "all_passed": all_passed,
@@ -156,7 +164,7 @@ async def submit_code(req: SubmitRequest):
 
     return {
         "submission_id": submission_id,
-        "learner_id": req.learner_id,
+        "learner_id": effective_learner_id,
         "challenge_id": challenge["id"],
         "all_passed": all_passed,
         "summary": summary,

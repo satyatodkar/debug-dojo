@@ -8,13 +8,14 @@ import json
 import importlib.util
 import traceback
 
-MAX_OUTPUT_BYTES = 8192
-MAX_REPR_BYTES   = 4096
+MAX_OUTPUT_BYTES = 65536  # 64 KiB output limit
+MAX_REPR_BYTES   = 16384
 
 class BoundedWriter:
     """Redirects learner print statements and enforces a strict byte cap."""
-    def __init__(self, limit: int = MAX_OUTPUT_BYTES):
+    def __init__(self, limit: int = MAX_OUTPUT_BYTES, token: str = ""):
         self.limit = limit
+        self.token = token
         self.written = 0
 
     def write(self, text: str):
@@ -23,17 +24,52 @@ class BoundedWriter:
         encoded_len = len(text.encode("utf-8", errors="replace"))
         self.written += encoded_len
         if self.written > self.limit:
-            # Enforced limit violation: terminate immediately
+            # Enforced limit violation: terminate immediately with structured payload
             payload = {
                 "status": "error",
-                "message": f"Output limit exceeded (maximum {self.limit} bytes allowed).",
+                "message": "Runtime Error — Output limit exceeded (maximum 64KB allowed).",
+                "limit_type": "output",
             }
-            sys.__stdout__.write(json.dumps(payload) + "\n")
+            prefix = f"{self.token}:" if self.token else ""
+            sys.__stdout__.write(f"{prefix}{json.dumps(payload)}\n")
             sys.__stdout__.flush()
-            os._exit(1)
+            os._exit(0)
 
     def flush(self):
         pass
+
+
+def _classify_runtime_exception(exc: Exception) -> dict:
+    """Classify exceptions into specific resource limit errors or standard runtime errors."""
+    err_str = str(exc).lower()
+    exc_type = type(exc).__name__
+
+    if isinstance(exc, MemoryError) or "memoryerror" in err_str or "out of memory" in err_str:
+        return {
+            "status": "error",
+            "message": "Runtime Error — Memory limit exceeded (128MB memory limit).",
+            "limit_type": "memory",
+        }
+
+    errno = getattr(exc, "errno", None)
+    if errno == 28 or "no space left on device" in err_str:
+        return {
+            "status": "error",
+            "message": "Runtime Error — Disk limit exceeded (temporary storage limit exceeded).",
+            "limit_type": "disk",
+        }
+
+    if errno == 11 or "resource temporarily unavailable" in err_str or "can't start new thread" in err_str:
+        return {
+            "status": "error",
+            "message": "Runtime Error — Process limit exceeded (maximum 32 processes allowed).",
+            "limit_type": "process",
+        }
+
+    tb = traceback.format_exc(limit=3)
+    short = "\n".join(tb.strip().splitlines()[-2:])
+    return {"status": "error", "message": short}
+
 
 def main():
     # ── Read task input ──────────────────────────────────────────────────
@@ -51,7 +87,7 @@ def main():
         sys.exit(1)
 
     # ── Install bounded stdout/stderr for learner code ───────────────────
-    learner_out = BoundedWriter(MAX_OUTPUT_BYTES)
+    learner_out = BoundedWriter(MAX_OUTPUT_BYTES, token=token)
     sys.stdout = learner_out
     sys.stderr = learner_out
 
@@ -62,11 +98,8 @@ def main():
             raise ImportError("Could not load /task/code.py")
         module = importlib.util.module_from_spec(spec_obj)
         spec_obj.loader.exec_module(module)
-    except Exception:
-        # Module-level error (SyntaxError, NameError at import, etc.)
-        tb = traceback.format_exc(limit=3)
-        short = "\n".join(tb.strip().splitlines()[-2:])
-        payload = {"status": "error", "message": short}
+    except Exception as exc:
+        payload = _classify_runtime_exception(exc)
         sys.__stdout__.write(f"{token}:{json.dumps(payload)}\n")
         sys.__stdout__.flush()
         sys.exit(0)
@@ -82,10 +115,8 @@ def main():
     # ── Execute target function ──────────────────────────────────────────
     try:
         result = fn(*args)
-    except Exception:
-        tb = traceback.format_exc(limit=3)
-        short = "\n".join(tb.strip().splitlines()[-2:])
-        payload = {"status": "error", "message": short}
+    except Exception as exc:
+        payload = _classify_runtime_exception(exc)
         sys.__stdout__.write(f"{token}:{json.dumps(payload)}\n")
         sys.__stdout__.flush()
         sys.exit(0)

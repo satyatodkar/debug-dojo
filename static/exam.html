@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Debug Dojo — Examination Panel</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link rel="stylesheet" href="/static/exam.css" />
+</head>
+<body class="exam-body">
+
+  <!-- ===== FIXED EXAMINATION HEADER ===== -->
+  <header class="exam-header" role="banner">
+    <div class="exam-header-inner">
+      <div class="exam-brand-group">
+        <span class="exam-logo">🥋 Debug Dojo</span>
+        <span class="exam-divider">|</span>
+        <span class="exam-tag">OFFICIAL EXAMINATION</span>
+        <span id="exam-challenge-title" class="exam-title-badge">Loading…</span>
+        <span id="exam-difficulty-badge" class="badge badge--difficulty">…</span>
+      </div>
+
+      <div class="exam-header-center">
+        <div id="exam-timer-container" class="exam-timer" aria-live="polite" aria-label="Examination countdown timer">
+          <span class="timer-icon" aria-hidden="true">⏱</span>
+          <span id="exam-timer-display" class="timer-digits">--:--</span>
+          <span id="exam-timer-warning" class="timer-warning-label" aria-hidden="true"></span>
+        </div>
+      </div>
+
+      <div class="exam-header-controls">
+        <span id="exam-status-badge" class="badge badge--status badge--in-progress">In Progress</span>
+        <span id="exam-learner-badge" class="exam-learner-id">Learner: student1</span>
+        <button id="exam-fullscreen-btn" class="btn btn--secondary btn--sm" aria-label="Toggle Fullscreen Mode" title="Toggle Fullscreen">
+          <span class="btn-icon">⛶</span> <span id="fullscreen-text">Fullscreen</span>
+        </button>
+        <button id="exam-header-submit-btn" class="btn btn--primary btn--sm" aria-label="Submit Examination">
+          Submit Exam
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ===== INTEGRITY WARNING BANNER (Shows upon suspicious activity) ===== -->
+  <aside id="integrity-alert-banner" class="integrity-alert hidden" role="alert" aria-live="assertive">
+    <div class="integrity-alert-content">
+      <span class="alert-icon">⚠️</span>
+      <span id="integrity-alert-text">Warning: Multiple integrity signals detected (e.g. paste attempt or window switch). All exam events are logged.</span>
+    </div>
+    <button id="integrity-alert-dismiss" class="alert-dismiss-btn" aria-label="Dismiss alert">✕</button>
+  </aside>
+
+  <!-- ===== TOAST CONTAINER (For immediate anti-paste warnings) ===== -->
+  <div id="toast-container" class="toast-container" aria-live="assertive"></div>
+
+  <!-- ===== MAIN TWO-COLUMN EXAMINATION VIEWPORT ===== -->
+  <main class="exam-viewport">
+
+    <!-- ── LEFT COLUMN: Question Paper & Assistance Panel (35-40%) ── -->
+    <section class="exam-left-column" aria-label="Question and Assistance Panel">
+      
+      <!-- Assistance Panel Internal Tabs -->
+      <nav class="exam-tabs" role="tablist" aria-label="Assistance Panel Tabs">
+        <button id="exam-tab-question" class="exam-tab active" role="tab" aria-selected="true" aria-controls="exam-panel-question" tabindex="0">
+          <span class="tab-icon">📄</span> <span class="tab-label">Question</span>
+        </button>
+        <button id="exam-tab-editor" class="exam-tab" role="tab" aria-selected="false" aria-controls="editor-wrapper" tabindex="-1">
+          <span class="tab-icon">🐍</span> <span class="tab-label">Code Editor</span>
+        </button>
+        <button id="exam-tab-hints" class="exam-tab" role="tab" aria-selected="false" aria-controls="exam-panel-hints" tabindex="-1">
+          <span class="tab-icon">💡</span> <span class="tab-label">Hints</span>
+          <span id="hints-tab-badge" class="hints-tab-badge hidden">0/3</span>
+        </button>
+        <button id="exam-tab-assistant" class="exam-tab" role="tab" aria-selected="false" aria-controls="exam-panel-assistant" tabindex="-1">
+          <span class="tab-icon">🤖</span> <span class="tab-label">AI Exam Assistant</span>
+        </button>
+        <button id="exam-tab-instructions" class="exam-tab" role="tab" aria-selected="false" aria-controls="exam-panel-instructions" tabindex="-1">
+          <span class="tab-icon">📋</span> <span class="tab-label">Instructions</span>
+        </button>
+      </nav>
+
+      <div class="column-scroll-wrap">
+        
+        <!-- ── TAB PANEL 1: Question ── -->
+        <div id="exam-panel-question" class="exam-panel active" role="tabpanel" aria-labelledby="exam-tab-question">
+          <!-- Question Header & Metadata -->
+          <article class="question-paper-card">
+            <div class="question-header">
+              <div class="question-meta-row">
+                <span id="question-number-badge" class="question-pill">Question 1 of 1</span>
+                <span id="question-concept-tags" class="tag-row"></span>
+              </div>
+              <h1 id="question-title" class="question-title">Loading Question…</h1>
+            </div>
+
+            <!-- Problem Description -->
+            <div class="question-section">
+              <h2 class="section-heading">Problem Statement</h2>
+              <div id="question-description" class="question-text markdown-body">
+                Loading challenge specification…
+              </div>
+            </div>
+
+            <!-- Function Signature & Constraints -->
+            <div class="question-section">
+              <h2 class="section-heading">Function Signature & Constraints</h2>
+              <div class="signature-box">
+                <code id="function-signature">def solution(...)</code>
+              </div>
+              <ul class="constraints-list">
+                <li>Must run within <strong>2.0 seconds</strong> execution limit.</li>
+                <li>Memory capped at <strong>128 MiB</strong> in restricted Docker container.</li>
+                <li>No external networking or file system persistence permitted.</li>
+              </ul>
+            </div>
+
+            <!-- Visible Sample Tests -->
+            <div class="question-section">
+              <h2 class="section-heading">Sample Visible Test Cases</h2>
+              <p class="section-subtext">These tests are evaluated when you click "Run Tests".</p>
+              <div id="visible-tests-preview" class="sample-tests-grid">
+                <!-- Dynamically populated -->
+              </div>
+            </div>
+
+          </article>
+        </div>
+
+        <!-- ── TAB PANEL 2: Progressive Hints ── -->
+        <div id="exam-panel-hints" class="exam-panel hidden" role="tabpanel" aria-labelledby="exam-tab-hints">
+          <article class="hints-paper-card">
+            <div class="hints-card-header">
+              <div class="hints-card-header-left">
+                <span class="hints-pill">💡 Progressive Guidance</span>
+                <h2 class="hints-heading">Examination Hints</h2>
+              </div>
+              <div class="hints-card-header-right">
+                <span id="hints-progress-pill" class="hints-progress-pill">0 of 3 Unlocked</span>
+              </div>
+            </div>
+            
+            <p class="hints-desc">
+              Request progressive, non-spoiler hints while your exam countdown timer continues running. Hints guide your reasoning without disclosing complete solutions or private test cases.
+            </p>
+
+            <!-- Unlocked Hints List -->
+            <div id="exam-hints-list" class="exam-hints-list">
+              <!-- Dynamically populated hint cards -->
+            </div>
+
+            <!-- Empty State (Shown before any hint is requested) -->
+            <div id="exam-hints-empty" class="hints-empty-state">
+              <div class="hints-empty-icon">💡</div>
+              <h3 class="hints-empty-title">Need a nudge in the right direction?</h3>
+              <p class="hints-empty-text">
+                You can unlock up to 3 progressive hints during your examination:
+              </p>
+              <ol class="hints-empty-ladder">
+                <li><strong>Hint 1 — Think:</strong> A guiding question to focus your reasoning on the relevant requirement.</li>
+                <li><strong>Hint 2 — Investigate:</strong> Targeted concept, operator, indexing or loop boundary analysis.</li>
+                <li><strong>Hint 3 — Narrow it down:</strong> Precise clue identifying the root cause without revealing the full fix.</li>
+              </ol>
+            </div>
+
+            <!-- Action / Button / Loading Area -->
+            <div class="hints-action-area">
+              <div id="exam-hints-loading" class="hints-loading-state hidden">
+                <span class="loading-spinner"></span>
+                <span>Retrieving progressive hint…</span>
+              </div>
+
+              <div id="exam-hints-error" class="hints-error-box hidden" role="alert"></div>
+
+              <button id="exam-request-hint-btn" class="btn btn--primary hints-request-btn">
+                <span class="btn-icon">💡</span> <span id="hints-btn-text">Request First Hint (Hint 1 — Think)</span>
+              </button>
+
+              <div id="exam-hints-exhausted" class="hints-exhausted-box hidden">
+                <span class="exhausted-icon">✓</span>
+                <span>All 3 progressive hints have been unlocked. Apply what you've learned to fix the issue!</span>
+              </div>
+            </div>
+
+            <!-- Safety & Timing Policy Banner -->
+            <div class="hints-policy-footer">
+              <span class="policy-icon">🔒</span>
+              <span class="policy-text">
+                <strong>Examination Policy:</strong> Hints provide conceptual assistance without revealing complete solutions or hidden test parameters. The exam timer continues running normally while viewing hints.
+              </span>
+            </div>
+          </article>
+        </div>
+
+        <!-- ── TAB PANEL 4: AI Exam Assistant ── -->
+        <div id="exam-panel-assistant" class="exam-panel hidden" role="tabpanel" aria-labelledby="exam-tab-assistant">
+          <article class="assistant-paper-card">
+            <div class="assistant-card-header">
+              <div class="assistant-card-header-left">
+                <span class="assistant-pill">🤖 AI Examination Assistant</span>
+                <h2 class="assistant-heading">Conceptual Tutor & Hints</h2>
+              </div>
+              <div class="assistant-card-header-right">
+                <span class="badge badge--difficulty">Exam Mode</span>
+              </div>
+            </div>
+
+            <!-- Notice Banner -->
+            <div class="assistant-notice-banner" role="note">
+              <span class="notice-icon">🔒</span>
+              <span class="notice-text">
+                <strong>Exam Mode:</strong> AI provides conceptual guidance and hints, not complete solutions.
+              </span>
+            </div>
+
+            <!-- Suggested Question Prompts -->
+            <div class="suggested-prompts-section">
+              <span class="suggested-label">Suggested Question Prompts:</span>
+              <div class="suggested-pills" id="assistant-suggested-pills">
+                <button type="button" class="suggested-pill" data-prompt="Explain this Python error.">Explain this Python error</button>
+                <button type="button" class="suggested-pill" data-prompt="Can you explain how this operator works?">How does this operator work?</button>
+                <button type="button" class="suggested-pill" data-prompt="Give me a hint about where to look.">Give me a hint about where to look</button>
+                <button type="button" class="suggested-pill" data-prompt="Explain the difference between these two concepts.">Compare two concepts</button>
+              </div>
+            </div>
+
+            <!-- Messages Container -->
+            <div id="exam-assistant-messages" class="assistant-messages-list" aria-live="polite">
+              <div class="assistant-msg msg--ai">
+                <div class="msg-avatar">🤖</div>
+                <div class="msg-bubble">
+                  <p>Hello! I am your <strong>AI Exam Assistant</strong>. I can clarify Python syntax, explain concepts, interpret error messages, and guide your thinking with progressive hints.</p>
+                  <p class="msg-subtext">Remember: I cannot write the complete solution or code replacement for this active examination. How can I help you understand the problem?</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Loading State -->
+            <div id="exam-assistant-loading" class="assistant-loading hidden" aria-live="polite">
+              <span class="loading-spinner"></span>
+              <span>AI Assistant is analyzing conceptually…</span>
+            </div>
+
+            <!-- Error Box -->
+            <div id="exam-assistant-error" class="assistant-error-box hidden" role="alert"></div>
+
+            <!-- Input Form -->
+            <form id="exam-assistant-form" class="assistant-form">
+              <div class="assistant-input-wrapper">
+                <textarea
+                  id="exam-assistant-input"
+                  class="assistant-input"
+                  placeholder="Ask a conceptual doubt, syntax question, or request a debugging hint..."
+                  rows="2"
+                  maxlength="2000"
+                  aria-label="Ask the AI Exam Assistant"
+                ></textarea>
+                <button id="exam-assistant-send-btn" type="submit" class="btn btn--primary assistant-send-btn" aria-label="Send message to AI assistant">
+                  <span class="btn-icon">➤</span> Send
+                </button>
+              </div>
+              <div class="assistant-form-footer">
+                <span class="input-char-counter"><span id="assistant-char-count">0</span>/2000 chars</span>
+                <span class="disclaimer-text">Solutions are never disclosed. All interactions are audited.</span>
+              </div>
+            </form>
+          </article>
+        </div>
+
+        <!-- ── TAB PANEL 5: Examination Instructions & Rules ── -->
+        <div id="exam-panel-instructions" class="exam-panel hidden" role="tabpanel" aria-labelledby="exam-tab-instructions">
+          <article class="instructions-paper-card">
+            <div class="instructions-card-header">
+              <span class="instructions-pill">📋 Examination Rules</span>
+              <h2 class="instructions-heading">Rules & Permitted Actions</h2>
+            </div>
+
+            <div class="instructions-section">
+              <h3 class="instructions-subheading">⏱ Time Limits & Authoritative Deadline</h3>
+              <p>The countdown timer displayed in the header is server-authoritative. Switching tabs, reading hints, or reloading the page will <strong>never</strong> pause, extend, or reset your examination time.</p>
+            </div>
+
+            <div class="instructions-section">
+              <h3 class="instructions-subheading">💡 Hints Usage Policy</h3>
+              <p>You may request up to 3 progressive hints at any point during your active attempt. Hints are non-spoiler conceptual aids designed to prompt your debugging process. Complete solution code is never provided.</p>
+            </div>
+
+            <div class="instructions-section">
+              <h3 class="instructions-subheading">🛡 Academic Integrity & Anti-Cheating Controls</h3>
+              <ul class="instructions-bullet-list">
+                <li><strong>Anti-Paste Controls:</strong> Clipboard paste and drag-and-drop are disabled in the exam editor. Solutions must be typed directly.</li>
+                <li><strong>Activity Auditing:</strong> Switching browser tabs, minimizing the exam window, or exiting fullscreen are recorded as integrity events.</li>
+                <li><strong>User Isolation:</strong> Attempts belong strictly to the authenticated learner.</li>
+              </ul>
+            </div>
+
+            <div class="instructions-section">
+              <h3 class="instructions-subheading">🐳 Isolated Execution Sandbox</h3>
+              <p>When you click <strong>Run Tests</strong>, your Python code is executed inside a disposable Docker container with:</p>
+              <ul class="instructions-bullet-list">
+                <li>Strict 2.0-second timeout per test case.</li>
+                <li>128 MiB RAM ceiling.</li>
+                <li>Zero network access and a read-only root filesystem.</li>
+              </ul>
+            </div>
+
+            <div class="instructions-section">
+              <h3 class="instructions-subheading">✓ Final Submission & Evaluation</h3>
+              <p>When you click <strong>Submit Answer</strong> or <strong>Submit Exam</strong>, your code is tested against both visible test cases and confidential hidden test cases. Once finalized, the attempt is closed and the final scorecard is displayed.</p>
+            </div>
+
+            <div class="instructions-section">
+              <h3 class="instructions-subheading">🟢 Permitted Actions</h3>
+              <ul class="instructions-bullet-list">
+                <li>Switching freely between Question, Hints, and Instructions tabs at any time.</li>
+                <li>Running visible tests as many times as you like before submitting.</li>
+                <li>Using the in-editor Tab key for 4-space indentation.</li>
+                <li>Resetting your code to the original starter code if needed.</li>
+              </ul>
+            </div>
+          </article>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ── RIGHT COLUMN: Coding Workspace & Results (60-65%) ── -->
+    <section class="exam-right-column" aria-label="Coding Workspace">
+      
+      <!-- Workspace Toolbar -->
+      <div class="workspace-toolbar">
+        <div class="toolbar-left">
+          <span class="file-name-tab">
+            <span class="file-icon">🐍</span> solution.py
+          </span>
+          <span id="code-status-indicator" class="code-status">Ready</span>
+        </div>
+        <div class="toolbar-right">
+          <button id="reset-code-btn" class="btn btn--ghost btn--xs" title="Reset code to original starter code">
+            Reset to Starter
+          </button>
+          <button id="run-tests-btn" class="btn btn--secondary btn--sm" aria-label="Run visible test cases">
+            <span class="btn-icon">▶</span> Run Tests
+          </button>
+          <button id="submit-exam-btn" class="btn btn--primary btn--sm" aria-label="Final Submit Examination">
+            <span class="btn-icon">✓</span> Submit Answer
+          </button>
+        </div>
+      </div>
+
+      <!-- Editor Container -->
+      <div class="editor-wrapper" id="editor-wrapper">
+        <textarea
+          id="exam-editor"
+          class="exam-textarea"
+          spellcheck="false"
+          autocomplete="off"
+          autocorrect="off"
+          autocapitalize="off"
+          placeholder="# Write your Python solution here..."
+          aria-label="Python examination code editor"
+        ></textarea>
+      </div>
+
+      <!-- Results & Console Panel -->
+      <section class="results-console" id="results-console" aria-label="Execution Console">
+        <div class="console-header">
+          <div class="console-title-group">
+            <span class="console-icon">💻</span>
+            <span class="console-title">Test Results Console</span>
+            <span id="console-badge" class="badge badge--neutral">No tests run yet</span>
+          </div>
+          <div class="console-controls">
+            <button id="collapse-console-btn" class="btn-icon-only" title="Toggle console height" aria-label="Toggle console height">↕</button>
+          </div>
+        </div>
+
+        <div id="console-output" class="console-body">
+          <div class="console-placeholder">
+            Click <strong>Run Tests</strong> to test your solution against visible test cases, or <strong>Submit Exam</strong> when you are ready to finalize.
+          </div>
+        </div>
+      </section>
+
+    </section>
+  </main>
+
+  <!-- ===== SUBMIT CONFIRMATION MODAL ===== -->
+  <div id="submit-modal" class="modal-backdrop hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-dialog">
+      <div class="modal-header">
+        <h3 id="modal-title" class="modal-title">⚠️ Submit Examination?</h3>
+        <button id="modal-close-btn" class="modal-close-btn" aria-label="Close dialog">✕</button>
+      </div>
+      <div class="modal-body">
+        <p>Are you sure you want to finalize your examination submission?</p>
+        <div class="modal-warning-box">
+          <ul>
+            <li>Your code will be evaluated against all <strong>visible</strong> and <strong>hidden</strong> test cases.</li>
+            <li>This attempt will be <strong>finalized</strong> and can no longer be edited or re-submitted.</li>
+            <li>Make sure you have tested your code thoroughly before submitting.</li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-cancel-btn" class="btn btn--secondary">Cancel</button>
+        <button id="modal-confirm-btn" class="btn btn--danger">Confirm & Finalize Exam</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== EXAMINATION RESULTS OVERLAY ===== -->
+  <div id="exam-results-overlay" class="exam-results-overlay hidden" role="region" aria-label="Examination Results">
+    <div class="exam-results-container">
+      <!-- Results Header -->
+      <div class="exam-results-header">
+        <span id="results-status-icon" class="results-status-icon" aria-hidden="true">✓</span>
+        <h2 id="results-heading" class="results-heading">Examination Complete</h2>
+        <span id="results-status-badge" class="badge badge--status badge--submitted">SUBMITTED</span>
+      </div>
+
+      <!-- Challenge Info -->
+      <div class="results-challenge-info">
+        <span id="results-challenge-title" class="results-challenge-title"></span>
+        <span id="results-difficulty-badge" class="badge badge--difficulty"></span>
+      </div>
+
+      <!-- Score Summary Card -->
+      <div id="results-score-card" class="results-score-card">
+        <div class="results-score-row">
+          <span class="results-score-label">Visible Tests</span>
+          <span id="results-visible-score" class="results-score-value">—</span>
+        </div>
+        <div class="results-score-row">
+          <span class="results-score-label">Hidden Tests</span>
+          <span id="results-hidden-score" class="results-score-value">—</span>
+        </div>
+        <div class="results-score-divider"></div>
+        <div class="results-score-row results-score-total">
+          <span class="results-score-label">Overall Result</span>
+          <span id="results-total-score" class="results-score-value">—</span>
+        </div>
+      </div>
+
+      <!-- Summary Message -->
+      <p id="results-summary-text" class="results-summary-text"></p>
+
+      <!-- Timestamp -->
+      <div class="results-timestamp">
+        <span class="timestamp-icon" aria-hidden="true">🕐</span>
+        <span id="results-timestamp-value" class="timestamp-value">—</span>
+      </div>
+
+      <!-- Visible Test Results List -->
+      <div id="results-test-list" class="results-test-list"></div>
+
+      <!-- Navigation Buttons -->
+      <div class="results-actions">
+        <button id="results-exit-btn" class="btn btn--secondary results-btn" aria-label="Exit Exam and return to Challenges">
+          Exit Exam
+        </button>
+        <button id="results-next-btn" class="btn btn--primary results-btn" aria-label="Go to Next Challenge">
+          Next Challenge →
+        </button>
+      </div>
+
+      <!-- Completion Message (shown when all challenges done) -->
+      <div id="results-completion-msg" class="results-completion-msg hidden" role="status"></div>
+    </div>
+  </div>
+
+  <script src="/static/exam.js"></script>
+</body>
+</html>

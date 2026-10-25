@@ -103,12 +103,12 @@
 
     const params = new URLSearchParams(window.location.search);
     const attemptId = params.get('attempt_id');
-    const challengeId = params.get('challenge_id');
+    const challengeId = params.get('challenge_id') || localStorage.getItem('debug_dojo_last_exam_challenge');
     const learnerId = params.get('learner_id') || localStorage.getItem('debug_dojo_learner_id') || 'student1';
     const devDuration = params.get('duration'); // dev testing override
 
     if (attemptId) {
-      await loadExistingAttempt(attemptId);
+      await loadExistingAttempt(attemptId, challengeId, learnerId, devDuration);
     } else if (challengeId) {
       await startNewAttempt(challengeId, learnerId, devDuration);
     } else {
@@ -137,36 +137,48 @@
 
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        renderErrorScreen(err.detail || `Failed to start examination (${res.status}).`);
+        renderErrorScreen(err.detail || `Failed to start examination (${res.status}).`, challengeId);
         return;
       }
 
       const data = await res.json();
       currentAttempt = data;
+      if (challengeId) {
+        localStorage.setItem('debug_dojo_last_exam_challenge', challengeId);
+      }
 
-      // Update URL to include attempt_id without reloading
-      const newUrl = `${window.location.pathname}?attempt_id=${encodeURIComponent(data.attempt_id)}`;
-      window.history.replaceState({ attemptId: data.attempt_id }, '', newUrl);
+      // Update URL to include attempt_id and challenge_id without reloading
+      const newUrl = `${window.location.pathname}?attempt_id=${encodeURIComponent(data.attempt_id)}&challenge_id=${encodeURIComponent(challengeId)}`;
+      window.history.replaceState({ attemptId: data.attempt_id, challengeId: challengeId }, '', newUrl);
 
       renderExamUI(data);
       startAuthoritativeTimer(data.deadline, data.remaining_seconds);
     } catch (err) {
-      renderErrorScreen(`Network failure connecting to examination backend: ${err.message}`);
+      renderErrorScreen(`Network failure connecting to examination backend: ${err.message}`, challengeId);
     }
   }
 
-  async function loadExistingAttempt(attemptId) {
+  async function loadExistingAttempt(attemptId, fallbackChallengeId, learnerId, devDuration) {
     try {
       codeStatus.textContent = 'Loading attempt…';
       const res = await fetch(`/api/exam/${encodeURIComponent(attemptId)}`);
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
-        renderErrorScreen(err.detail || `Examination attempt not found (${res.status}).`);
+        // If the attempt was lost (e.g. server restarted or redeployed), gracefully start a fresh attempt
+        if (res.status === 404 && fallbackChallengeId) {
+          console.warn(`Attempt ${attemptId} not found (server restart). Auto-starting fresh attempt for ${fallbackChallengeId}...`);
+          await startNewAttempt(fallbackChallengeId, learnerId, devDuration);
+          return;
+        }
+        renderErrorScreen(err.detail || `Examination attempt not found (${res.status}).`, fallbackChallengeId);
         return;
       }
 
       const data = await res.json();
       currentAttempt = data;
+      if (data.challenge_id) {
+        localStorage.setItem('debug_dojo_last_exam_challenge', data.challenge_id);
+      }
       renderExamUI(data);
 
       if (data.status === 'submitted' || data.status === 'expired') {
@@ -175,7 +187,7 @@
         startAuthoritativeTimer(data.deadline, data.remaining_seconds);
       }
     } catch (err) {
-      renderErrorScreen(`Error loading examination attempt: ${err.message}`);
+      renderErrorScreen(`Error loading examination attempt: ${err.message}`, fallbackChallengeId);
     }
   }
 
@@ -1489,12 +1501,18 @@
     }
   }
 
-  function renderErrorScreen(message) {
+  function renderErrorScreen(message, challengeId) {
+    const restartBtn = challengeId
+      ? `<a href="/exam?challenge_id=${encodeURIComponent(challengeId)}" style="background-color: #10b981; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">🎓 Start Fresh Exam</a>`
+      : '';
     document.body.innerHTML = `
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background-color: #0b0f19; color: #f8fafc; font-family: sans-serif; padding: 24px; text-align: center;">
-        <h1 style="font-size: 2rem; color: #f87171; margin-bottom: 12px;">⚠️ Examination Error</h1>
-        <p style="font-size: 1.1rem; color: #cbd5e1; max-width: 500px; line-height: 1.5; margin-bottom: 24px;">${escapeHtml(message)}</p>
-        <a href="/" style="background-color: #3b82f6; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600;">Return to Debug Dojo</a>
+        <h1 style="font-size: 2rem; color: #f87171; margin-bottom: 12px;">⚠️ Examination Notice</h1>
+        <p style="font-size: 1.1rem; color: #cbd5e1; max-width: 520px; line-height: 1.5; margin-bottom: 24px;">${escapeHtml(message)}</p>
+        <div style="display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;">
+          ${restartBtn}
+          <a href="/" style="background-color: #3b82f6; color: white; padding: 10px 20px; border-radius: 6px; text-decoration: none; font-weight: 600; display: inline-block;">Return to Debug Dojo</a>
+        </div>
       </div>
     `;
   }

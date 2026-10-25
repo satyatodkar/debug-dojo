@@ -26,6 +26,24 @@ supabase: Client = create_client(url, key)
 _SUPPORTS_SESSION_ID_COLUMN: Optional[bool] = None
 
 
+def _as_uuid_or_none(value: Optional[str]) -> Optional[str]:
+    """Return value only if it is a valid UUID string, otherwise None.
+
+    The 'session_id' column in agent_audit_logs is typed UUID in Supabase.
+    Custom identifiers like 'atm_a454f0871a11' are not valid UUIDs and
+    must not be passed to that column or Supabase returns error 22P02.
+    The original value is still preserved in the metadata JSON field.
+    """
+    import uuid as _uuid_mod
+    if not value:
+        return None
+    try:
+        _uuid_mod.UUID(str(value))
+        return str(value)
+    except ValueError:
+        return None
+
+
 # ==============================================================================
 # 2. Custom Exceptions
 # ==============================================================================
@@ -741,6 +759,11 @@ def log_agent_audit(
     for sensitive_key in ("api_key", "password", "secret", "token", "authorization"):
         audit_metadata.pop(sensitive_key, None)
 
+    # Sanitize session_id — the Supabase column is typed UUID; custom IDs like
+    # 'atm_...' are not valid UUIDs and cause error 22P02. Pass None instead;
+    # the original value is already stored in audit_metadata["session_id"].
+    safe_session_id = _as_uuid_or_none(session_id)
+
     base_record: Dict[str, Any] = {
         "learner_id": learner_id,
         "challenge_id": challenge_id,
@@ -754,7 +777,7 @@ def log_agent_audit(
     # Attempt insert based on schema column support
     if _SUPPORTS_SESSION_ID_COLUMN is True:
         record_to_insert = dict(base_record)
-        record_to_insert["session_id"] = session_id
+        record_to_insert["session_id"] = safe_session_id
         try:
             res = client.table("agent_audit_logs").insert(record_to_insert).execute()
             if not res.data:
@@ -775,7 +798,7 @@ def log_agent_audit(
     else:
         # First-time probe: test if session_id column exists
         record_with_session = dict(base_record)
-        record_with_session["session_id"] = session_id
+        record_with_session["session_id"] = safe_session_id
         try:
             res = client.table("agent_audit_logs").insert(record_with_session).execute()
             _SUPPORTS_SESSION_ID_COLUMN = True

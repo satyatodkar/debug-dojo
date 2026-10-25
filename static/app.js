@@ -1804,7 +1804,16 @@ async function loadAccountData() {
 
   try {
     const res = await fetch('/api/account');
-    if (!res.ok) return;
+    if (!res.ok) {
+      const headerName = document.getElementById('acc-header-name');
+      if (headerName) headerName.textContent = currentUser?.full_name || 'My Account';
+      const headerEmail = document.getElementById('acc-header-email');
+      if (headerEmail) headerEmail.textContent = currentUser?.email || '';
+      const avatarLarge = document.getElementById('acc-avatar-large');
+      if (avatarLarge) avatarLarge.textContent = getInitials(currentUser?.full_name || '');
+      console.warn('[Debug Dojo] /api/account returned', res.status);
+      return;
+    }
     const data = await res.json();
     const u = data.user;
 
@@ -1833,6 +1842,12 @@ async function loadAccountData() {
     if (statusBadge) statusBadge.textContent = u.status === 'active' ? 'Active Learner' : u.status;
   } catch (err) {
     console.warn('[Debug Dojo] Error loading account data:', err);
+    const headerName = document.getElementById('acc-header-name');
+    if (headerName) headerName.textContent = currentUser?.full_name || 'My Account';
+    const headerEmail = document.getElementById('acc-header-email');
+    if (headerEmail) headerEmail.textContent = currentUser?.email || '';
+    const avatarLarge = document.getElementById('acc-avatar-large');
+    if (avatarLarge) avatarLarge.textContent = getInitials(currentUser?.full_name || '');
   }
 }
 
